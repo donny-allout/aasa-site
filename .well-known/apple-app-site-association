@@ -1,0 +1,16 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["VCP6H8D3VC.alloutdoors.co.Allout"],
+        "components": [
+          { "/": "/post/*" },
+          { "/": "/reel/*" },
+          { "/": "/listing/*" },
+          { "/": "/trophy/*" },
+          { "/": "/u/*" }
+        ]
+      }
+    ]
+  }
+}
