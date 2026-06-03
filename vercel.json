@@ -23,19 +23,19 @@
     },
     {
       "src": "/post/(.*)",
-      "dest": "/allout-site/index.html"
+      "dest": "/allout-site/redirect.html"
     },
     {
       "src": "/reel/(.*)",
-      "dest": "/allout-site/index.html"
+      "dest": "/allout-site/redirect.html"
     },
     {
       "src": "/trophy/(.*)",
-      "dest": "/allout-site/index.html"
+      "dest": "/allout-site/redirect.html"
     },
     {
       "src": "/u/(.*)",
-      "dest": "/allout-site/index.html"
+      "dest": "/allout-site/redirect.html"
     },
     {
       "src": "/(.*)",
