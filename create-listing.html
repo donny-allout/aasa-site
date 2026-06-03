@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>List a Firearm — Allout</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --orange: #E8780A; --orange-dim: rgba(232,120,10,0.12);
+    --bg: #0a0a0a; --surface: #111; --surface2: #161616;
+    --border: #1f1f1f; --text: #e8e8e8; --muted: #666; --white: #fff;
+    --red: #e53e3e;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif;
+    font-weight: 300; font-size: 15px; line-height: 1.7; min-height: 100vh; }
+
+  /* ── Header ── */
+  header { display: flex; align-items: center; gap: 12px; padding: 20px 24px;
+    border-bottom: 1px solid var(--border); position: sticky; top: 0;
+    background: rgba(10,10,10,0.94); backdrop-filter: blur(12px); z-index: 10; }
+  .logo { font-family: 'Bebas Neue', cursive; font-size: 24px; letter-spacing: 0.18em;
+    color: var(--white); text-decoration: none; }
+  .logo-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--orange); }
+  .header-badge { margin-left: auto; font-family: 'DM Mono', monospace; font-size: 10px;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--orange);
+    background: var(--orange-dim); border: 1px solid rgba(232,120,10,0.2);
+    border-radius: 4px; padding: 4px 10px; }
+
+  .page { max-width: 640px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  /* ── Auth screen ── */
+  #auth-screen { text-align: center; padding: 60px 0; }
+  .auth-logo { font-family: 'Bebas Neue', cursive; font-size: 56px; letter-spacing: 8px;
+    color: var(--white); margin-bottom: 4px; }
+  .auth-sub { font-size: 13px; color: var(--muted); margin-bottom: 36px; }
+  .auth-box { background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 32px; max-width: 380px; margin: 0 auto; }
+  .auth-title { font-size: 18px; font-weight: 500; color: var(--white); margin-bottom: 6px; }
+  .auth-desc { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+
+  /* ── Form heading ── */
+  .form-header { margin-bottom: 32px; }
+  .form-tag { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--orange); background: var(--orange-dim);
+    border: 1px solid rgba(232,120,10,0.2); border-radius: 4px;
+    padding: 4px 10px; display: inline-block; margin-bottom: 14px; }
+  .form-title { font-family: 'Bebas Neue', cursive; font-size: 38px;
+    letter-spacing: 0.06em; color: var(--white); line-height: 1; }
+
+  /* ── Sections ── */
+  .section { border-top: 1px solid var(--border); padding: 28px 0; }
+  .section-label { font-family: 'DM Mono', monospace; font-size: 10px;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);
+    margin-bottom: 16px; }
+
+  /* ── Inputs ── */
+  label { display: block; font-size: 12px; font-weight: 500; color: #aaa;
+    letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 6px; }
+  input[type=text], input[type=number], input[type=email],
+  input[type=password], textarea, select {
+    width: 100%; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text); font-family: 'DM Sans', sans-serif;
+    font-size: 14px; padding: 11px 14px; outline: none;
+    transition: border-color 0.15s; appearance: none; }
+  input:focus, textarea:focus, select:focus { border-color: var(--orange); }
+  textarea { resize: vertical; min-height: 100px; }
+  select option { background: #1a1a1a; }
+  .field { margin-bottom: 16px; }
+  .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  /* ── Toggle ── */
+  .toggle-row { display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .toggle-row:last-child { border-bottom: none; }
+  .toggle-info { flex: 1; }
+  .toggle-label { font-size: 14px; font-weight: 500; color: var(--white); }
+  .toggle-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .toggle { position: relative; width: 44px; height: 26px; flex-shrink: 0; margin-left: 16px; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .slider { position: absolute; inset: 0; background: var(--border); border-radius: 26px;
+    cursor: pointer; transition: background 0.2s; }
+  .slider::before { content: ''; position: absolute; width: 20px; height: 20px;
+    background: #fff; border-radius: 50%; top: 3px; left: 3px; transition: transform 0.2s; }
+  .toggle input:checked + .slider { background: var(--orange); }
+  .toggle input:checked + .slider::before { transform: translateX(18px); }
+
+  /* ── Image upload ── */
+  .upload-zone { border: 1px dashed var(--border); border-radius: 10px;
+    padding: 32px; text-align: center; cursor: pointer;
+    transition: border-color 0.2s, background 0.2s; }
+  .upload-zone:hover { border-color: var(--orange); background: var(--orange-dim); }
+  .upload-zone input { display: none; }
+  .upload-icon { font-size: 28px; margin-bottom: 8px; opacity: 0.5; }
+  .upload-text { font-size: 13px; color: var(--muted); }
+  .upload-text strong { color: var(--orange); }
+  .previews { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 8px; margin-top: 12px; }
+  .preview-wrap { position: relative; aspect-ratio: 1; }
+  .preview-wrap img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
+  .preview-del { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px;
+    background: rgba(0,0,0,0.7); border: none; border-radius: 50%; color: #fff;
+    font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+  /* ── Buttons ── */
+  .btn { display: flex; align-items: center; justify-content: center; gap: 8px;
+    font-family: 'Bebas Neue', cursive; font-size: 18px; letter-spacing: 2px;
+    border: none; border-radius: 10px; cursor: pointer;
+    transition: opacity 0.2s, transform 0.15s; }
+  .btn:hover:not(:disabled) { opacity: 0.88; transform: translateY(-1px); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-primary { background: var(--orange); color: #fff; width: 100%; height: 52px; }
+  .btn-outline { background: transparent; color: var(--white); width: 100%; height: 46px;
+    border: 1px solid var(--border); font-family: 'DM Sans', sans-serif;
+    font-size: 14px; letter-spacing: normal; }
+  .btn-outline:hover:not(:disabled) { border-color: var(--muted); }
+
+  /* ── Feedback ── */
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px 20px; font-size: 13px; color: var(--text);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5); z-index: 99;
+    display: none; white-space: nowrap; }
+  .toast.show { display: block; }
+  .toast.success { border-color: #38a169; color: #68d391; }
+  .toast.error { border-color: var(--red); color: #fc8181; }
+
+  .progress-bar { height: 3px; background: var(--border); border-radius: 2px;
+    margin-bottom: 20px; overflow: hidden; display: none; }
+  .progress-fill { height: 100%; background: var(--orange);
+    transition: width 0.3s; width: 0%; }
+
+  .helper { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  @media (max-width: 500px) {
+    .row-2 { grid-template-columns: 1fr; }
+    .page { padding-left: 16px; padding-right: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="https://alloutdoors.co" class="logo">ALLOUT</a>
+  <div class="logo-dot"></div>
+  <span class="header-badge">List a Firearm</span>
+</header>
+
+<!-- ── Auth Screen ──────────────────────────────────────────────────────── -->
+<div class="page" id="auth-screen">
+  <div class="auth-logo">ALLOUT</div>
+  <div class="auth-sub">Sign in to list your firearm</div>
+  <div class="auth-box">
+    <div class="auth-title">Sign in with Email</div>
+    <div class="auth-desc">We'll send you a magic link — no password needed.</div>
+    <div class="field">
+      <label>Email address</label>
+      <input type="email" id="auth-email" placeholder="you@example.com">
+    </div>
+    <button class="btn btn-primary" id="auth-btn" onclick="sendMagicLink()" style="margin-top:8px">
+      SEND MAGIC LINK
+    </button>
+    <p id="auth-msg" style="font-size:12px;color:var(--muted);margin-top:14px;text-align:center;display:none"></p>
+  </div>
+</div>
+
+<!-- ── Listing Form ─────────────────────────────────────────────────────── -->
+<div class="page" id="form-screen" style="display:none">
+
+  <div class="form-header">
+    <div class="form-tag">🔫 Firearm Listing</div>
+    <div class="form-title">NEW LISTING</div>
+  </div>
+
+  <div class="progress-bar" id="progress-bar">
+    <div class="progress-fill" id="progress-fill"></div>
+  </div>
+
+  <!-- Basic Info -->
+  <div class="section">
+    <div class="section-label">Basic Info</div>
+    <div class="field">
+      <label>Title *</label>
+      <input type="text" id="f-title" placeholder="e.g. Remington 870 12ga Shotgun">
+    </div>
+    <div class="row-2">
+      <div class="field">
+        <label>Price (USD) *</label>
+        <input type="number" id="f-price" placeholder="450" min="0">
+      </div>
+      <div class="field">
+        <label>Condition *</label>
+        <select id="f-condition">
+          <option value="">Select…</option>
+          <option>New</option>
+          <option>Like New</option>
+          <option>Excellent</option>
+          <option>Good</option>
+          <option>Fair</option>
+          <option>Poor</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label>Description</label>
+      <textarea id="f-desc" placeholder="Describe the item — include any extras, wear, history, or other details buyers should know."></textarea>
+    </div>
+  </div>
+
+  <!-- Firearm Details -->
+  <div class="section">
+    <div class="section-label">Firearm Details</div>
+    <div class="row-2">
+      <div class="field">
+        <label>Manufacturer</label>
+        <input type="text" id="f-manufacturer" placeholder="e.g. Remington">
+      </div>
+      <div class="field">
+        <label>Model</label>
+        <input type="text" id="f-model" placeholder="e.g. 870 Express">
+      </div>
+    </div>
+    <div class="row-2">
+      <div class="field">
+        <label>Caliber / Gauge</label>
+        <input type="text" id="f-caliber" placeholder="e.g. 12 Gauge">
+      </div>
+      <div class="field">
+        <label>Type</label>
+        <select id="f-firearm-type">
+          <option value="">Select…</option>
+          <option>Shotgun</option>
+          <option>Rifle</option>
+          <option>Handgun</option>
+          <option>Muzzleloader</option>
+          <option>Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="toggle-row">
+      <div class="toggle-info">
+        <div class="toggle-label">FFL Transfer Required</div>
+        <div class="toggle-desc">Buyer must transfer through a licensed dealer</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="f-ffl" checked>
+        <span class="slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <!-- Location -->
+  <div class="section">
+    <div class="section-label">Location</div>
+    <div class="row-2">
+      <div class="field">
+        <label>City *</label>
+        <input type="text" id="f-city" placeholder="e.g. Covington">
+      </div>
+      <div class="field">
+        <label>State *</label>
+        <select id="f-state">
+          <option value="">Select…</option>
+          <option>AL</option><option>AK</option><option>AZ</option><option>AR</option>
+          <option>CA</option><option>CO</option><option>CT</option><option>DE</option>
+          <option>FL</option><option>GA</option><option>HI</option><option>ID</option>
+          <option>IL</option><option>IN</option><option>IA</option><option>KS</option>
+          <option>KY</option><option>LA</option><option>ME</option><option>MD</option>
+          <option>MA</option><option>MI</option><option>MN</option><option>MS</option>
+          <option>MO</option><option>MT</option><option>NE</option><option>NV</option>
+          <option>NH</option><option>NJ</option><option>NM</option><option>NY</option>
+          <option>NC</option><option>ND</option><option>OH</option><option>OK</option>
+          <option>OR</option><option>PA</option><option>RI</option><option>SC</option>
+          <option>SD</option><option>TN</option><option>TX</option><option>UT</option>
+          <option>VT</option><option>VA</option><option>WA</option><option>WV</option>
+          <option>WI</option><option>WY</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Photos -->
+  <div class="section">
+    <div class="section-label">Photos (up to 10)</div>
+    <label class="upload-zone" id="upload-zone" onclick="document.getElementById('photo-input').click()">
+      <input type="file" id="photo-input" accept="image/*" multiple onchange="handlePhotos(this.files)">
+      <div class="upload-icon">📷</div>
+      <div class="upload-text">Tap to add photos<br><strong>JPG, PNG, HEIC</strong> up to 10MB each</div>
+    </label>
+    <div class="previews" id="previews"></div>
+  </div>
+
+  <!-- Legal -->
+  <div class="section">
+    <div style="background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--orange);border-radius:8px;padding:16px 18px;font-size:13px;color:#aaa;line-height:1.7">
+      By submitting this listing you confirm you are the lawful owner of this item and that all applicable federal, state, and local laws will be followed in any transfer. Allout does not verify buyer eligibility or arrange transfers.
+    </div>
+  </div>
+
+  <button class="btn btn-primary" id="submit-btn" onclick="submitListing()">
+    PUBLISH LISTING
+  </button>
+
+  <div style="margin-top:12px">
+    <button class="btn btn-outline" onclick="signOut()">Sign out</button>
+  </div>
+</div>
+
+<!-- ── Success Screen ───────────────────────────────────────────────────── -->
+<div class="page" id="success-screen" style="display:none;text-align:center;padding-top:80px">
+  <div style="font-size:48px;margin-bottom:16px">✅</div>
+  <div style="font-family:'Bebas Neue',cursive;font-size:40px;letter-spacing:4px;color:var(--white);margin-bottom:8px">LISTING LIVE</div>
+  <p style="color:var(--muted);font-size:14px;margin-bottom:32px">Your firearm listing is now live on Alloutdoors.co.</p>
+  <a id="view-link" href="#" class="btn btn-primary" style="text-decoration:none;max-width:280px;margin:0 auto 12px">VIEW LISTING</a>
+  <button class="btn btn-outline" style="max-width:280px;margin:0 auto" onclick="resetForm()">LIST ANOTHER</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL  = 'https://tnvhrmabgmlwehvfljmu.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRudmhybWFiZ21sd2VodmZsam11Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5MDY5MjAsImV4cCI6MjA3ODQ4MjkyMH0.5aHVV-kI8dMFJ4cH2ydjkOnz4j9JNqPTrpK8NOUGdo4';
+const FIREARM_CATEGORY_ID = '2979bf93-dc43-4713-a4ca-b2b3ada238e2';
+const APP_STORE_URL = 'https://apps.apple.com/app/allout/id6761731625';
+
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+let uploadedFiles = [];   // { file, previewUrl }
+let currentUser = null;
+
+// ── Auth ─────────────────────────────────────────────────────────────────────
+async function init() {
+  // 1. Check URL hash for tokens passed from the Allout app.
+  //    The app appends #access_token=...&refresh_token=... when opening this
+  //    page so users who are already signed in never see the auth screen.
+  const hash = new URLSearchParams(window.location.hash.slice(1));
+  const accessToken  = hash.get('access_token');
+  const refreshToken = hash.get('refresh_token');
+
+  if (accessToken && refreshToken) {
+    const { data, error } = await sb.auth.setSession({
+      access_token:  accessToken,
+      refresh_token: refreshToken,
+    });
+    if (data?.session) {
+      currentUser = data.session.user;
+      // Remove tokens from URL so they don't linger in browser history
+      history.replaceState(null, '', window.location.pathname);
+      showForm();
+      return;
+    }
+  }
+
+  // 2. Check for an existing session (returning user, magic-link callback)
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    currentUser = session.user;
+    showForm();
+  }
+
+  // 3. Listen for magic-link sign-ins
+  sb.auth.onAuthStateChange((_event, session) => {
+    if (session) {
+      currentUser = session.user;
+      showForm();
+    } else {
+      currentUser = null;
+      show('auth-screen');
+      hide('form-screen');
+    }
+  });
+}
+
+async function sendMagicLink() {
+  const email = document.getElementById('auth-email').value.trim();
+  if (!email) { toast('Enter your email address.', 'error'); return; }
+
+  const btn = document.getElementById('auth-btn');
+  btn.disabled = true;
+  btn.textContent = 'SENDING…';
+
+  const { error } = await sb.auth.signInWithOtp({
+    email,
+    options: { emailRedirectTo: window.location.href }
+  });
+
+  if (error) {
+    toast(error.message, 'error');
+    btn.disabled = false;
+    btn.textContent = 'SEND MAGIC LINK';
+  } else {
+    const msg = document.getElementById('auth-msg');
+    msg.textContent = '✅ Check your email — click the link to sign in.';
+    msg.style.display = 'block';
+    btn.textContent = 'EMAIL SENT';
+  }
+}
+
+async function signOut() {
+  await sb.auth.signOut();
+  show('auth-screen');
+  hide('form-screen');
+}
+
+function showForm() {
+  hide('auth-screen');
+  hide('success-screen');
+  document.getElementById('form-screen').style.display = 'block';
+}
+
+// ── Photos ────────────────────────────────────────────────────────────────────
+function handlePhotos(files) {
+  const remaining = 10 - uploadedFiles.length;
+  const toAdd = Array.from(files).slice(0, remaining);
+  toAdd.forEach(file => {
+    const url = URL.createObjectURL(file);
+    uploadedFiles.push({ file, previewUrl: url });
+  });
+  renderPreviews();
+}
+
+function renderPreviews() {
+  const container = document.getElementById('previews');
+  container.innerHTML = '';
+  uploadedFiles.forEach((item, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'preview-wrap';
+    wrap.innerHTML = `
+      <img src="${item.previewUrl}" alt="photo ${i+1}">
+      <button class="preview-del" onclick="removePhoto(${i})">✕</button>`;
+    container.appendChild(wrap);
+  });
+  document.getElementById('upload-zone').style.display =
+    uploadedFiles.length >= 10 ? 'none' : '';
+}
+
+function removePhoto(i) {
+  uploadedFiles.splice(i, 1);
+  renderPreviews();
+}
+
+// ── Submit ────────────────────────────────────────────────────────────────────
+async function submitListing() {
+  if (!currentUser) { toast('Please sign in first.', 'error'); return; }
+
+  const title     = document.getElementById('f-title').value.trim();
+  const price     = parseFloat(document.getElementById('f-price').value);
+  const city      = document.getElementById('f-city').value.trim();
+  const state     = document.getElementById('f-state').value;
+
+  if (!title)        { toast('Title is required.', 'error'); return; }
+  if (isNaN(price))  { toast('Enter a valid price.', 'error'); return; }
+  if (!city || !state) { toast('City and state are required.', 'error'); return; }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'PUBLISHING…';
+
+  const progressBar  = document.getElementById('progress-bar');
+  const progressFill = document.getElementById('progress-fill');
+  progressBar.style.display = 'block';
+
+  try {
+    // 1. Insert listing row
+    progressFill.style.width = '20%';
+    const listingId = crypto.randomUUID();
+    const { error: insertErr } = await sb.from('marketplace_listings').insert({
+      listing_id:    listingId,
+      owner_id:      currentUser.id,
+      title,
+      description:   document.getElementById('f-desc').value.trim() || null,
+      price_cents:   Math.round(price * 100),
+      listing_type:  'firearm',
+      category_id:   FIREARM_CATEGORY_ID,
+      requires_ffl:  document.getElementById('f-ffl').checked,
+      manufacturer:  document.getElementById('f-manufacturer').value.trim() || null,
+      model:         document.getElementById('f-model').value.trim() || null,
+      caliber:       document.getElementById('f-caliber').value.trim() || null,
+      condition:     document.getElementById('f-condition').value || null,
+      location_city:  city,
+      location_state: state,
+      status:        'active',
+    });
+    if (insertErr) throw insertErr;
+
+    // 2. Upload photos
+    const total = uploadedFiles.length;
+    for (let i = 0; i < total; i++) {
+      const { file } = uploadedFiles[i];
+      const ext  = file.name.split('.').pop().toLowerCase().replace('heic','jpg');
+      const path = `${currentUser.id}/${listingId}/${i}_${Date.now()}.${ext}`;
+
+      const { error: uploadErr } = await sb.storage
+        .from('marketplace')
+        .upload(path, file, { contentType: file.type, upsert: false });
+      if (uploadErr) throw uploadErr;
+
+      // Insert media row
+      await sb.from('marketplace_listing_media').insert({
+        listing_id:   listingId,
+        owner_id:     currentUser.id,
+        storage_path: path,
+        media_type:   'image',
+        sort_order:   i,
+      });
+
+      // Set first image as thumbnail
+      if (i === 0) {
+        await sb.from('marketplace_listings')
+          .update({ thumbnail_path: path, thumbnail_media_type: 'image' })
+          .eq('listing_id', listingId);
+      }
+
+      progressFill.style.width = `${20 + Math.round((i + 1) / total * 75)}%`;
+    }
+
+    progressFill.style.width = '100%';
+
+    // 3. Show success
+    document.getElementById('view-link').href =
+      `https://alloutdoors.co/listing?id=${listingId}`;
+    setTimeout(() => {
+      progressBar.style.display = 'none';
+      hide('form-screen');
+      document.getElementById('success-screen').style.display = 'block';
+    }, 400);
+
+  } catch (err) {
+    console.error(err);
+    toast(err.message || 'Something went wrong. Please try again.', 'error');
+    btn.disabled = false;
+    btn.textContent = 'PUBLISH LISTING';
+    progressBar.style.display = 'none';
+  }
+}
+
+function resetForm() {
+  uploadedFiles = [];
+  renderPreviews();
+  ['f-title','f-price','f-desc','f-manufacturer','f-model','f-caliber','f-city']
+    .forEach(id => document.getElementById(id).value = '');
+  ['f-condition','f-state','f-firearm-type']
+    .forEach(id => document.getElementById(id).selectedIndex = 0);
+  document.getElementById('f-ffl').checked = true;
+  hide('success-screen');
+  showForm();
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function toast(msg, type = 'info') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `toast show ${type}`;
+  setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+// ── Utils ─────────────────────────────────────────────────────────────────────
+function show(id) { document.getElementById(id).style.display = 'block'; }
+function hide(id) { document.getElementById(id).style.display = 'none'; }
+
+init();
+</script>
+</body>
+</html>
