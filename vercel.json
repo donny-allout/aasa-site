@@ -10,6 +10,34 @@
       "dest": "/.well-known/$1"
     },
     {
+      "src": "/listing/([a-f0-9-]+)",
+      "dest": "/allout-site/listing.html?id=$1"
+    },
+    {
+      "src": "/create-listing",
+      "dest": "/allout-site/create-listing.html"
+    },
+    {
+      "src": "/legal",
+      "dest": "/allout-site/legal.html"
+    },
+    {
+      "src": "/post/(.*)",
+      "dest": "/allout-site/index.html"
+    },
+    {
+      "src": "/reel/(.*)",
+      "dest": "/allout-site/index.html"
+    },
+    {
+      "src": "/trophy/(.*)",
+      "dest": "/allout-site/index.html"
+    },
+    {
+      "src": "/u/(.*)",
+      "dest": "/allout-site/index.html"
+    },
+    {
       "src": "/(.*)",
       "dest": "/allout-site/$1"
     }
