@@ -102,6 +102,42 @@
     border: 1px solid rgba(232,120,10,0.2);
     border-radius: 4px; padding: 2px 7px; margin-top: 6px; }
 
+  /* ── Auth / Acknowledgment screens ── */
+  .gate-screen { display: flex; align-items: center; justify-content: center;
+    min-height: 80vh; padding: 40px 24px; }
+  .gate-card { background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 40px; max-width: 460px; width: 100%; }
+  .gate-logo { font-family: 'Bebas Neue', cursive; font-size: 36px;
+    letter-spacing: 0.15em; color: var(--white); margin-bottom: 4px; }
+  .gate-title { font-size: 19px; font-weight: 600; color: var(--white); margin-bottom: 6px; }
+  .gate-desc { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 24px; }
+  .gate-field { margin-bottom: 16px; }
+  .gate-field label { display: block; font-size: 11px; font-weight: 500; color: #888;
+    letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 6px; }
+  .gate-field input { width: 100%; background: #0d0d0d; border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text); font-family: 'DM Sans', sans-serif;
+    font-size: 14px; padding: 11px 14px; outline: none; transition: border-color .15s; }
+  .gate-field input:focus { border-color: var(--orange); }
+  .gate-msg { font-size: 12px; color: var(--muted); margin-top: 14px; text-align: center; }
+  /* Acknowledgment toggles */
+  .ack-toggle { display: flex; align-items: flex-start; gap: 14px;
+    padding: 16px 0; border-bottom: 1px solid var(--border); }
+  .ack-toggle:last-of-type { border-bottom: none; }
+  .ack-toggle input[type=checkbox] { width: 18px; height: 18px; flex-shrink: 0;
+    margin-top: 2px; accent-color: var(--orange); cursor: pointer; }
+  .ack-toggle-text { font-size: 13px; color: #bbb; line-height: 1.6; }
+  .ack-fine-print { font-size: 11px; color: var(--muted); line-height: 1.65;
+    margin-top: 20px; padding: 14px; background: #0d0d0d;
+    border: 1px solid var(--border); border-radius: 8px; }
+  /* Disclaimer banner (always shown above listings) */
+  .disclaimer-banner { background: rgba(232,120,10,0.06);
+    border-bottom: 1px solid rgba(232,120,10,0.2);
+    padding: 12px 24px; }
+  .disclaimer-inner { max-width: 1100px; margin: 0 auto;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .disclaimer-inner span { font-size: 12px; color: #999; line-height: 1.6; }
+  .disclaimer-inner strong { color: var(--orange); font-weight: 500; }
+
   /* ── States ── */
   .state { display: flex; flex-direction: column; align-items: center;
     justify-content: center; min-height: 40vh; gap: 14px;
@@ -152,6 +188,77 @@
   </div>
   <a href="https://apps.apple.com/app/allout/id6761731625" class="nav-cta">Download App</a>
 </nav>
+
+<!-- Auth gate (hidden until needed) -->
+<div id="auth-screen" class="gate-screen" style="display:none">
+  <div class="gate-card">
+    <div class="gate-logo">ALLOUT</div>
+    <div class="gate-title">Sign in to browse firearms</div>
+    <div class="gate-desc">You need an Allout account to view firearm listings. Sign in with your email — we'll send a magic link.</div>
+    <div class="gate-field">
+      <label>Email address</label>
+      <input type="email" id="auth-email" placeholder="you@example.com"
+             onkeydown="if(event.key==='Enter') sendMagicLink()">
+    </div>
+    <button class="btn-orange" style="width:100%;justify-content:center"
+            id="auth-btn" onclick="sendMagicLink()">SEND MAGIC LINK</button>
+    <p class="gate-msg" id="auth-msg" style="display:none"></p>
+    <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:16px">
+      Don't have an account? <a href="https://apps.apple.com/app/allout/id6761731625"
+      style="color:var(--orange)">Download the Allout app</a> to create one.
+    </p>
+  </div>
+</div>
+
+<!-- Acknowledgment screen (shown once after sign-in) -->
+<div id="ack-screen" class="gate-screen" style="display:none">
+  <div class="gate-card">
+    <div class="gate-logo" style="margin-bottom:14px">ALLOUT</div>
+    <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.12em;
+         text-transform:uppercase;color:var(--orange);background:rgba(232,120,10,0.1);
+         border:1px solid rgba(232,120,10,0.2);border-radius:4px;padding:4px 10px;
+         display:inline-block;margin-bottom:14px">⚖️ Compliance Acknowledgment</div>
+    <div class="gate-title">Before you continue</div>
+    <div class="gate-desc">Allout is a neutral venue for lawful firearm transactions. To access firearm listings you must confirm the following.</div>
+
+    <div class="ack-toggle">
+      <input type="checkbox" id="ack-age">
+      <div class="ack-toggle-text">I am at least <strong style="color:var(--white)">18 years of age</strong> and am legally permitted to purchase, possess, and sell firearms in my state and jurisdiction.</div>
+    </div>
+    <div class="ack-toggle">
+      <input type="checkbox" id="ack-laws">
+      <div class="ack-toggle-text">I agree to comply with all applicable <strong style="color:var(--white)">federal, state, and local laws</strong> regarding the purchase, sale, transfer, and possession of firearms — including background check requirements and FFL transfer regulations where required.</div>
+    </div>
+    <div class="ack-toggle">
+      <input type="checkbox" id="ack-venue">
+      <div class="ack-toggle-text">I understand that Allout is a <strong style="color:var(--white)">neutral listing venue</strong> only. Allout does not process payments, verify buyer eligibility, arrange transfers, or guarantee any listing or user.</div>
+    </div>
+
+    <div class="ack-fine-print">
+      Firearm transfers between residents of different states must be completed through a federally licensed dealer (FFL). Transactions involving prohibited persons, unlawful interstate transfers, or items restricted by state law are strictly prohibited and may be reported to appropriate authorities.
+    </div>
+
+    <button class="btn-orange" style="width:100%;justify-content:center;margin-top:20px"
+            id="ack-btn" onclick="submitAcknowledgment()" disabled>
+      I ACKNOWLEDGE &amp; CONTINUE
+    </button>
+    <button onclick="signOut()"
+      style="width:100%;background:none;border:none;color:var(--muted);
+             font-size:12px;margin-top:12px;cursor:pointer;font-family:inherit">
+      Sign out
+    </button>
+  </div>
+</div>
+
+<!-- Disclaimer banner (always shown above listings) -->
+<div id="disclaimer-banner" class="disclaimer-banner" style="display:none">
+  <div class="disclaimer-inner">
+    <span>⚖️ <strong>Legal Reminder:</strong> All firearm transactions must comply with applicable federal, state, and local laws. Allout does not process payments, verify eligibility, or arrange transfers. Users are solely responsible for lawful compliance. <a href="/legal" style="color:var(--orange)">Terms & Legal</a></span>
+  </div>
+</div>
+
+<!-- Main content (hidden until authenticated + acknowledged) -->
+<div id="main-content" style="display:none">
 
 <!-- Hero -->
 <div class="hero">
@@ -212,6 +319,8 @@
   </div>
 </div>
 
+</div><!-- /main-content -->
+
 <footer>
   <span style="font-family:'Bebas Neue',cursive;font-size:18px;letter-spacing:0.15em">ALLOUT</span>
   <div class="footer-links">
@@ -239,15 +348,128 @@ let sortMode     = 'newest';
 let stateFilter  = '';
 let searchTimer  = null;
 
-// Restore session from app token in URL hash (seamless auth from app)
+const ACK_VERSION = 'web-1';
+
 async function init() {
+  // Restore session from app token in URL hash (seamless auth from app)
   const hash = new URLSearchParams(window.location.hash.slice(1));
   const at = hash.get('access_token'), rt = hash.get('refresh_token');
   if (at && rt) {
     await sb.auth.setSession({ access_token: at, refresh_token: rt });
     history.replaceState(null, '', window.location.pathname);
   }
-  await fetchListings();
+
+  const { data: { session } } = await sb.auth.getSession();
+
+  if (!session) {
+    // Not signed in — show auth gate
+    show('auth-screen');
+    return;
+  }
+
+  await checkAcknowledgment(session.user.id);
+
+  // Watch for sign-in via magic link
+  sb.auth.onAuthStateChange(async (_event, session) => {
+    if (session) {
+      hide('auth-screen');
+      await checkAcknowledgment(session.user.id);
+    }
+  });
+}
+
+async function checkAcknowledgment(userId) {
+  const { data } = await sb
+    .from('marketplace_firearms_ack')
+    .select('version')
+    .eq('user_id', userId)
+    .limit(1)
+    .single();
+
+  if (data?.version === ACK_VERSION) {
+    showListings();
+  } else {
+    showAckScreen();
+  }
+}
+
+function showAckScreen() {
+  hide('auth-screen');
+  hide('main-content');
+  hide('disclaimer-banner');
+  show('ack-screen');
+
+  // Enable confirm button only when all three boxes checked
+  ['ack-age', 'ack-laws', 'ack-venue'].forEach(id => {
+    document.getElementById(id).addEventListener('change', () => {
+      const allChecked = ['ack-age', 'ack-laws', 'ack-venue']
+        .every(id => document.getElementById(id).checked);
+      document.getElementById('ack-btn').disabled = !allChecked;
+    });
+  });
+}
+
+function showListings() {
+  hide('auth-screen');
+  hide('ack-screen');
+  show('disclaimer-banner');
+  show('main-content');
+  fetchListings();
+}
+
+async function submitAcknowledgment() {
+  const btn = document.getElementById('ack-btn');
+  btn.disabled = true;
+  btn.textContent = 'SAVING…';
+
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { showAuthScreen(); return; }
+
+  const { error } = await sb
+    .from('marketplace_firearms_ack')
+    .upsert({
+      user_id:        session.user.id,
+      version:        ACK_VERSION,
+      acknowledged_at: new Date().toISOString(),
+    }, { onConflict: 'user_id' });
+
+  if (error) {
+    btn.disabled = false;
+    btn.textContent = 'I ACKNOWLEDGE & CONTINUE';
+    alert('Something went wrong. Please try again.');
+    return;
+  }
+
+  showListings();
+}
+
+async function sendMagicLink() {
+  const email = document.getElementById('auth-email').value.trim();
+  if (!email) return;
+  const btn = document.getElementById('auth-btn');
+  btn.disabled = true;
+  btn.textContent = 'SENDING…';
+
+  const { error } = await sb.auth.signInWithOtp({
+    email,
+    options: { emailRedirectTo: window.location.href }
+  });
+
+  if (error) {
+    btn.disabled = false;
+    btn.textContent = 'SEND MAGIC LINK';
+    alert(error.message);
+  } else {
+    const msg = document.getElementById('auth-msg');
+    msg.textContent = '✅ Check your email and click the link to sign in.';
+    msg.style.display = 'block';
+    btn.textContent = 'EMAIL SENT';
+  }
+}
+
+async function signOut() {
+  await sb.auth.signOut();
+  location.reload();
 }
 
 async function fetchListings() {
