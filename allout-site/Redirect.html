@@ -7,116 +7,99 @@
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    background: #080808;
-    color: #e0e0e0;
+    background: #080808; color: #e0e0e0;
     font-family: -apple-system, 'DM Sans', sans-serif;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    text-align: center;
-    padding: 24px;
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh; text-align: center; padding: 24px;
   }
-  .card {
-    max-width: 340px;
-    width: 100%;
-  }
-  .logo {
-    font-family: 'Bebas Neue', Georgia, serif;
-    font-size: 48px;
-    letter-spacing: 0.18em;
-    color: #fff;
-    margin-bottom: 6px;
-  }
-  .dot {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: #E8780A;
-    display: inline-block;
-    margin-left: 4px;
-    vertical-align: middle;
-    margin-bottom: 4px;
-  }
-  .spinner {
-    width: 36px; height: 36px;
-    border: 2px solid #1f1f1f;
-    border-top-color: #E8780A;
-    border-radius: 50%;
-    animation: spin 0.9s linear infinite;
-    margin: 28px auto 20px;
-  }
+  .card { max-width: 340px; width: 100%; }
+  .logo { font-family: Georgia, serif; font-size: 44px;
+    letter-spacing: 0.14em; color: #fff; margin-bottom: 6px; font-weight: 700; }
+  .logo-sub { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: #E8780A; margin-bottom: 32px; }
+  .spinner { width: 36px; height: 36px; border: 2px solid #1f1f1f;
+    border-top-color: #E8780A; border-radius: 50%;
+    animation: spin 0.9s linear infinite; margin: 0 auto 20px; }
   @keyframes spin { to { transform: rotate(360deg); } }
-  .status { font-size: 15px; color: #888; margin-bottom: 32px; }
-  .btn-store {
-    display: inline-flex; align-items: center; gap: 10px;
-    background: #E8780A; color: #fff;
-    padding: 14px 28px; border-radius: 12px;
-    font-size: 15px; font-weight: 500; text-decoration: none;
-    transition: opacity 0.2s; width: 100%;
-    justify-content: center;
+  .status { font-size: 15px; color: #777; margin-bottom: 32px; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    color: #fff; padding: 14px 28px; border-radius: 12px; font-size: 15px;
+    font-weight: 500; text-decoration: none; transition: opacity 0.2s;
+    width: 100%; border: none; cursor: pointer; font-family: inherit;
   }
+  .btn-store { background: #E8780A; }
   .btn-store:hover { opacity: 0.88; }
-  .hint {
-    font-size: 12px; color: #444;
-    margin-top: 20px; line-height: 1.6;
-  }
-  .hint a { color: #666; text-decoration: underline; }
+  .btn-web { background: #1a1a1a; border: 1px solid #2a2a2a; color: #ccc;
+    margin-top: 10px; font-size: 14px; }
+  .btn-web:hover { border-color: #444; }
+  .hint { font-size: 12px; color: #444; margin-top: 20px; line-height: 1.6; }
+  .hint a { color: #666; text-decoration: underline; cursor: pointer; }
 </style>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 </head>
 <body>
 <div class="card">
-  <div class="logo">ALLOUT<span class="dot"></span></div>
+  <div class="logo">ALLOUT</div>
+  <div class="logo-sub">The Platform for the Pursuit</div>
 
   <div class="spinner" id="spinner"></div>
   <p class="status" id="status">Opening in the Allout app…</p>
 
-  <a href="https://apps.apple.com/app/allout/id6761731625"
-     class="btn-store" id="store-btn" style="display:none">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98l-.09.06c-.22.14-2.18 1.27-2.16 3.8.03 3.02 2.65 4.03 2.68 4.04l-.07.28zM13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
-    </svg>
-    Download Allout on the App Store
-  </a>
-
-  <p class="hint" id="hint" style="display:none">
-    Already have Allout? <a href="#" id="retry-link">Try opening again</a>
-  </p>
+  <div id="fallback" style="display:none">
+    <a href="https://apps.apple.com/app/allout/id6761731625" class="btn btn-store">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98l-.09.06c-.22.14-2.18 1.27-2.16 3.8.03 3.02 2.65 4.03 2.68 4.04l-.07.28zM13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+      </svg>
+      Download Allout — Free
+    </a>
+    <!-- For listing paths only: also offer a web fallback -->
+    <a id="web-fallback-btn" class="btn btn-web" style="display:none">
+      View Listing on Web
+    </a>
+    <p class="hint">
+      Already have Allout? <a onclick="retry()">Try opening again</a>
+    </p>
+  </div>
 </div>
 
 <script>
 const APP_STORE = 'https://apps.apple.com/app/allout/id6761731625';
+const path = window.location.pathname; // e.g. /post/abc or /listing/abc
 
-// Build the allout:// deep link from the current path
-// e.g. alloutdoors.co/post/UUID  →  allout://post/UUID
-const path = window.location.pathname; // e.g. /post/abc-123
-const deepLink = 'allout:/' + path;    // allout://post/abc-123
+// Deep link: allout://post/UUID, allout://listing/UUID, etc.
+const deepLink = 'allout:/' + path;
 
-function attemptOpen() {
+// For listing paths, offer a web fallback too
+// (useful for people browsing firearms from /firearms who don't have the app)
+const isListing = /^\/listing\//.test(path);
+if (isListing) {
+  const uuid = path.split('/').pop();
+  const webBtn = document.getElementById('web-fallback-btn');
+  webBtn.href  = '/listing/' + uuid + '?web=1';
+  webBtn.style.display = 'flex';
+}
+
+function attempt() {
   document.getElementById('spinner').style.display = 'block';
   document.getElementById('status').textContent = 'Opening in the Allout app…';
-  document.getElementById('store-btn').style.display = 'none';
-  document.getElementById('hint').style.display = 'none';
+  document.getElementById('fallback').style.display = 'none';
 
-  // Fire the deep link
   window.location.href = deepLink;
 
-  // If the app doesn't open within 2.2s the user doesn't have it installed
-  // — show the App Store button
+  // After 2.2s assume app not installed — show fallback
   setTimeout(() => {
     document.getElementById('spinner').style.display = 'none';
-    document.getElementById('status').textContent = 'Get Allout to view this content.';
-    document.getElementById('store-btn').style.display = 'flex';
-    document.getElementById('hint').style.display = 'block';
+    document.getElementById('status').textContent =
+      isListing
+        ? 'Get Allout to view this listing in-app.'
+        : 'Get Allout to view this content.';
+    document.getElementById('fallback').style.display = 'block';
   }, 2200);
 }
 
-document.getElementById('retry-link').addEventListener('click', e => {
-  e.preventDefault();
-  attemptOpen();
-});
+function retry() { attempt(); }
 
-// Start immediately
-attemptOpen();
+attempt();
 </script>
 </body>
 </html>
