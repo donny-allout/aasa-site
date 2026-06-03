@@ -1,6 +1,17 @@
 {
   "routes": [
-    { "src": "/.well-known/(.*)", "dest": "/.well-known/$1" },
-    { "src": "/(.*)",             "dest": "/allout-site/$1" }
+    {
+      "src": "/.well-known/apple-app-site-association",
+      "dest": "/.well-known/apple-app-site-association",
+      "headers": { "Content-Type": "application/json" }
+    },
+    {
+      "src": "/.well-known/(.*)",
+      "dest": "/.well-known/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/allout-site/$1"
+    }
   ]
 }
