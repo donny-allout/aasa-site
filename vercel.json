@@ -10,6 +10,10 @@
       "dest": "/.well-known/$1"
     },
     {
+      "src": "/firearms",
+      "dest": "/allout-site/firearms.html"
+    },
+    {
       "src": "/listing/([a-f0-9-]+)",
       "dest": "/allout-site/listing.html?id=$1"
     },
