@@ -1,6 +1,0 @@
-{
-  "routes": [
-    { "src": "/.well-known/(.*)", "dest": "/.well-known/$1" },
-    { "src": "/(.*)",             "dest": "/allout-site/$1" }
-  ]
-}
