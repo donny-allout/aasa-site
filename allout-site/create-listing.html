@@ -161,16 +161,27 @@
   <div class="auth-logo">ALLOUT</div>
   <div class="auth-sub">Sign in to list your firearm</div>
   <div class="auth-box">
-    <div class="auth-title">Sign in with Email</div>
-    <div class="auth-desc">We'll send you a magic link — no password needed.</div>
+    <div class="auth-title">Sign In</div>
+    <div class="auth-desc">Use the email and password from your Allout account.</div>
     <div class="field">
       <label>Email address</label>
-      <input type="email" id="auth-email" placeholder="you@example.com">
+      <input type="email" id="auth-email" placeholder="you@example.com"
+             onkeydown="if(event.key==='Enter') document.getElementById('auth-password').focus()">
     </div>
-    <button class="btn btn-primary" id="auth-btn" onclick="sendMagicLink()" style="margin-top:8px">
-      SEND MAGIC LINK
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="auth-password" placeholder="••••••••"
+             onkeydown="if(event.key==='Enter') signIn()">
+    </div>
+    <p id="auth-msg" style="font-size:12px;color:#fc8181;margin-bottom:10px;display:none"></p>
+    <button class="btn btn-primary" id="auth-btn" onclick="signIn()" style="margin-top:4px">
+      SIGN IN
     </button>
-    <p id="auth-msg" style="font-size:12px;color:var(--muted);margin-top:14px;text-align:center;display:none"></p>
+    <p style="font-size:12px;color:var(--muted);margin-top:16px;text-align:center">
+      Forgot your password?
+      <a href="#" onclick="resetPassword()" style="color:var(--orange)">Reset it</a>
+    </p>
+    <p id="reset-msg" style="font-size:12px;color:#68d391;margin-top:10px;text-align:center;display:none"></p>
   </div>
 </div>
 
@@ -369,12 +380,9 @@ async function init() {
     showForm();
   }
 
-  // 3. Listen for magic-link sign-ins
+  // Watch for sign-out
   sb.auth.onAuthStateChange((_event, session) => {
-    if (session) {
-      currentUser = session.user;
-      showForm();
-    } else {
+    if (!session) {
       currentUser = null;
       show('auth-screen');
       hide('form-screen');
@@ -382,29 +390,53 @@ async function init() {
   });
 }
 
-async function sendMagicLink() {
-  const email = document.getElementById('auth-email').value.trim();
-  if (!email) { toast('Enter your email address.', 'error'); return; }
+async function signIn() {
+  const email    = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  const msg      = document.getElementById('auth-msg');
+  msg.style.display = 'none';
+
+  if (!email || !password) {
+    msg.textContent = 'Please enter your email and password.';
+    msg.style.display = 'block';
+    return;
+  }
 
   const btn = document.getElementById('auth-btn');
   btn.disabled = true;
-  btn.textContent = 'SENDING…';
+  btn.textContent = 'SIGNING IN…';
 
-  const { error } = await sb.auth.signInWithOtp({
-    email,
-    options: { emailRedirectTo: window.location.href }
-  });
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
 
   if (error) {
-    toast(error.message, 'error');
-    btn.disabled = false;
-    btn.textContent = 'SEND MAGIC LINK';
-  } else {
-    const msg = document.getElementById('auth-msg');
-    msg.textContent = '✅ Check your email — click the link to sign in.';
+    msg.textContent = error.message === 'Invalid login credentials'
+      ? 'Incorrect email or password. Try again.'
+      : error.message;
     msg.style.display = 'block';
-    btn.textContent = 'EMAIL SENT';
+    btn.disabled = false;
+    btn.textContent = 'SIGN IN';
+  } else {
+    currentUser = data.user;
+    showForm();
   }
+}
+
+async function resetPassword() {
+  const email = document.getElementById('auth-email').value.trim();
+  if (!email) {
+    const msg = document.getElementById('auth-msg');
+    msg.textContent = 'Enter your email address above first.';
+    msg.style.display = 'block';
+    return;
+  }
+  const { error } = await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.href,
+  });
+  const resetMsg = document.getElementById('reset-msg');
+  resetMsg.textContent = error
+    ? error.message
+    : '✅ Password reset email sent — check your inbox.';
+  resetMsg.style.display = 'block';
 }
 
 async function signOut() {
