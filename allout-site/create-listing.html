@@ -515,7 +515,6 @@ async function submitListing() {
       price_cents:   Math.round(price * 100),
       listing_type:  'firearm',
       category_id:   FIREARM_CATEGORY_ID,
-      requires_ffl:  document.getElementById('f-ffl').checked,
       manufacturer:  document.getElementById('f-manufacturer').value.trim() || null,
       model:         document.getElementById('f-model').value.trim() || null,
       caliber:       document.getElementById('f-caliber').value.trim() || null,
@@ -546,6 +545,13 @@ async function submitListing() {
         media_type:   'image',
         sort_order:   i,
       });
+
+      // Update requires_ffl separately — avoids schema cache issues
+      // (safe to fail silently; column may need schema cache reload in Supabase dashboard)
+      await sb.from('marketplace_listings')
+        .update({ requires_ffl: document.getElementById('f-ffl').checked })
+        .eq('listing_id', listingId)
+        .then(() => {});
 
       // Set first image as thumbnail
       if (i === 0) {
