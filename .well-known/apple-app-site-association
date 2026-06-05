@@ -12,5 +12,8 @@
         ]
       }
     ]
+  },
+  "webcredentials": {
+    "apps": ["VCP6H8D3VC.alloutdoors.co.Allout"]
   }
 }
