@@ -447,9 +447,19 @@ async function load() {
   }
 
   const params = new URLSearchParams(window.location.search);
-  const id = params.get('id');
+  let id = params.get('id');
 
-  if (!id || !/^[0-9a-f-]{36}$/i.test(id)) {
+  // Vercel rewrites expose ?id= server-side only — extract from path for client JS
+  if (!id) {
+    const segments = window.location.pathname.split('/').filter(Boolean);
+    const idx = segments.indexOf('listing');
+    if (idx !== -1 && segments[idx + 1]) {
+      id = segments[idx + 1].split('?')[0];
+    }
+  }
+
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!id || !UUID_RE.test(id)) {
     hide('loading');
     show('error');
     text('error-msg', 'Invalid or missing listing ID.');
