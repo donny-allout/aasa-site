@@ -22,12 +22,8 @@
       "dest": "/allout-site/legal.html"
     },
     {
-      "src": "/listing/([a-f0-9-]+)\\?web=1",
-      "dest": "/allout-site/listing.html?id=$1"
-    },
-    {
       "src": "/listing/([a-f0-9-]+)",
-      "dest": "/allout-site/redirect.html"
+      "dest": "/allout-site/listing.html?id=$1"
     },
     {
       "src": "/post/(.*)",
