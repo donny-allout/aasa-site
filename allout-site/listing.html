@@ -447,15 +447,7 @@ async function load() {
   }
 
   const params = new URLSearchParams(window.location.search);
-  let id = params.get('id');
-
-  // Also handle clean URL path format: /listing/UUID (used by deep links)
-  if (!id) {
-    const pathMatch = window.location.pathname.match(
-      /\/listing\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i
-    );
-    if (pathMatch) id = pathMatch[1];
-  }
+  const id = params.get('id');
 
   if (!id || !/^[0-9a-f-]{36}$/i.test(id)) {
     hide('loading');
@@ -467,7 +459,7 @@ async function load() {
   try {
     // 1. Fetch listing
     const listings = await sbFetch('marketplace_listings', {
-      select: 'listing_id,owner_id,title,description,price_cents,listing_type,requires_ffl,manufacturer,model,caliber,condition,location_city,location_state,location_name',
+      select: 'listing_id,owner_id,title,description,price_cents,listing_type,firearm_requires_ffl,manufacturer,model,caliber,condition,location_city,location_state,location_name',
       'listing_id': `eq.${id}`,
       limit: 1,
     });
@@ -509,7 +501,7 @@ async function load() {
     text('listing-price',    formatPrice(listing.price_cents));
 
     // FFL
-    if (listing.requires_ffl) flex('ffl-banner');
+    if (listing.firearm_requires_ffl) flex('ffl-banner');
 
     // Description
     if (listing.description) {
@@ -553,7 +545,7 @@ async function load() {
     // CTA deep link → opens Allout app to the seller's profile / listing
     // Format: allout://listing?id=UUID  (wire this universal link in your app)
     const ctaLink = document.getElementById('cta-link');
-    ctaLink.href = `allout://listing?id=${id}`;
+    ctaLink.href = `allout://listing/${id}`;
 
     // Swap to app store link if app not installed
     ctaLink.addEventListener('click', e => {
