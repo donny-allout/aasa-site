@@ -508,7 +508,7 @@ async function fetchListings() {
 
   let query = sb
     .from('marketplace_listings')
-    .select('listing_id, title, price_cents, location_city, location_state, firearm_requires_ffl, created_at, thumbnail_path, thumbnail_media_type')
+    .select('listing_id, title, price_cents, location_city, location_state, firearm_requires_ffl, created_at, thumbnail_path')
     .eq('listing_type', 'firearm')
     .eq('status', 'active');
 
