@@ -560,7 +560,7 @@ function renderBatch() {
 
     const card = document.createElement('a');
     card.className = 'card';
-    card.href = `/listing/${listing.listing_id}?web=1`;
+    card.href = `/listing/${listing.listing_id}`;
     card.innerHTML = thumbURL
       ? `<img class="card-img" src="${thumbURL}" alt="${listing.title}" loading="lazy" onerror="this.parentNode.innerHTML='<div class=\'card-img-placeholder\'>🔫</div>'">`
       : `<div class="card-img-placeholder">🔫</div>`;
