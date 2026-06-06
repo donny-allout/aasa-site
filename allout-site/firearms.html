@@ -194,16 +194,25 @@
   <div class="gate-card">
     <div class="gate-logo">ALLOUT</div>
     <div class="gate-title">Sign in to browse firearms</div>
-    <div class="gate-desc">You need an Allout account to view firearm listings. Sign in with your email — we'll send a magic link.</div>
+    <div class="gate-desc">Use the email and password from your Allout account.</div>
     <div class="gate-field">
       <label>Email address</label>
       <input type="email" id="auth-email" placeholder="you@example.com"
-             onkeydown="if(event.key==='Enter') sendMagicLink()">
+             onkeydown="if(event.key==='Enter') document.getElementById('auth-password').focus()">
     </div>
+    <div class="gate-field">
+      <label>Password</label>
+      <input type="password" id="auth-password" placeholder="••••••••"
+             onkeydown="if(event.key==='Enter') signIn()">
+    </div>
+    <p id="auth-msg" style="font-size:12px;color:#fc8181;margin-bottom:10px;display:none"></p>
     <button class="btn-orange" style="width:100%;justify-content:center"
-            id="auth-btn" onclick="sendMagicLink()">SEND MAGIC LINK</button>
-    <p class="gate-msg" id="auth-msg" style="display:none"></p>
-    <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:16px">
+            id="auth-btn" onclick="signIn()">SIGN IN</button>
+    <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:14px">
+      Forgot your password? <a href="#" onclick="resetPassword()" style="color:var(--orange)">Reset it</a>
+    </p>
+    <p id="reset-msg" style="font-size:12px;color:#68d391;margin-top:8px;text-align:center;display:none"></p>
+    <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:10px">
       Don't have an account? <a href="https://apps.apple.com/app/allout/id6761731625"
       style="color:var(--orange)">Download the Allout app</a> to create one.
     </p>
@@ -369,12 +378,9 @@ async function init() {
 
   await checkAcknowledgment(session.user.id);
 
-  // Watch for sign-in via magic link
+  // Watch for sign-out
   sb.auth.onAuthStateChange(async (_event, session) => {
-    if (session) {
-      hide('auth-screen');
-      await checkAcknowledgment(session.user.id);
-    }
+    if (!session) { location.reload(); }
   });
 }
 
@@ -443,28 +449,53 @@ async function submitAcknowledgment() {
   showListings();
 }
 
-async function sendMagicLink() {
-  const email = document.getElementById('auth-email').value.trim();
-  if (!email) return;
+async function signIn() {
+  const email    = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  const msg      = document.getElementById('auth-msg');
+  msg.style.display = 'none';
+
+  if (!email || !password) {
+    msg.textContent = 'Please enter your email and password.';
+    msg.style.display = 'block';
+    return;
+  }
+
   const btn = document.getElementById('auth-btn');
   btn.disabled = true;
-  btn.textContent = 'SENDING…';
+  btn.textContent = 'SIGNING IN…';
 
-  const { error } = await sb.auth.signInWithOtp({
-    email,
-    options: { emailRedirectTo: window.location.href }
-  });
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
 
   if (error) {
-    btn.disabled = false;
-    btn.textContent = 'SEND MAGIC LINK';
-    alert(error.message);
-  } else {
-    const msg = document.getElementById('auth-msg');
-    msg.textContent = '✅ Check your email and click the link to sign in.';
+    msg.textContent = error.message === 'Invalid login credentials'
+      ? 'Incorrect email or password. Try again.'
+      : error.message;
     msg.style.display = 'block';
-    btn.textContent = 'EMAIL SENT';
+    btn.disabled = false;
+    btn.textContent = 'SIGN IN';
+  } else {
+    hide('auth-screen');
+    await checkAcknowledgment(data.user.id);
   }
+}
+
+async function resetPassword() {
+  const email = document.getElementById('auth-email').value.trim();
+  if (!email) {
+    const msg = document.getElementById('auth-msg');
+    msg.textContent = 'Enter your email address above first.';
+    msg.style.display = 'block';
+    return;
+  }
+  const { error } = await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.href,
+  });
+  const resetMsg = document.getElementById('reset-msg');
+  resetMsg.textContent = error
+    ? error.message
+    : '✅ Password reset email sent — check your inbox.';
+  resetMsg.style.display = 'block';
 }
 
 async function signOut() {
@@ -477,11 +508,7 @@ async function fetchListings() {
 
   let query = sb
     .from('marketplace_listings')
-    .select(`
-      listing_id, title, price_cents, location_city, location_state,
-      requires_ffl, created_at,
-      marketplace_listing_media(storage_path, sort_order)
-    `)
+    .select('listing_id, title, price_cents, location_city, location_state, firearm_requires_ffl, created_at, thumbnail_path, thumbnail_media_type')
     .eq('listing_type', 'firearm')
     .eq('status', 'active');
 
@@ -502,7 +529,12 @@ async function fetchListings() {
 
   hide('loading');
 
-  if (error || !data?.length) {
+  if (error) {
+    console.error('Supabase error:', error);
+    show('empty');
+    return;
+  }
+  if (!data?.length) {
     show('empty');
     return;
   }
@@ -518,9 +550,9 @@ function renderBatch() {
   const grid  = document.getElementById('grid');
 
   batch.forEach(listing => {
-    const thumb = listing.marketplace_listing_media
-      ?.sort((a, b) => a.sort_order - b.sort_order)[0]?.storage_path;
-    const thumbURL = thumb ? `${STORAGE_BASE}/${thumb}` : null;
+    const thumbURL = listing.thumbnail_path
+      ? `${STORAGE_BASE}/${listing.thumbnail_path}`
+      : null;
     const price = listing.price_cents
       ? '$' + (listing.price_cents / 100).toLocaleString('en-US', { minimumFractionDigits: 2 })
       : 'Price on request';
@@ -528,16 +560,16 @@ function renderBatch() {
 
     const card = document.createElement('a');
     card.className = 'card';
-    card.href = `/listing/${listing.listing_id}`;
+    card.href = `/listing/${listing.listing_id}?web=1`;
     card.innerHTML = thumbURL
-      ? `<img class="card-img" src="${thumbURL}" alt="${listing.title}" loading="lazy">`
+      ? `<img class="card-img" src="${thumbURL}" alt="${listing.title}" loading="lazy" onerror="this.parentNode.innerHTML='<div class=\'card-img-placeholder\'>🔫</div>'">`
       : `<div class="card-img-placeholder">🔫</div>`;
     card.innerHTML += `
       <div class="card-body">
         <div class="card-price">${price}</div>
         <div class="card-title">${listing.title}</div>
         ${loc ? `<div class="card-meta">📍 ${loc}</div>` : ''}
-        ${listing.requires_ffl ? '<span class="card-ffl">FFL Required</span>' : ''}
+        ${listing.firearm_requires_ffl ? '<span class="card-ffl">FFL Required</span>' : ''}
       </div>`;
     grid.appendChild(card);
   });
