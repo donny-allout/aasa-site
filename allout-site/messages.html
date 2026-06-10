@@ -327,6 +327,12 @@ function renderThreads() {
   list.innerHTML = threads.map(t => {
     const isBuyer = t.buyer_id === currentUser.id;
     const partnerName = isBuyer ? (t.seller_display_name || 'Seller') : (t.buyer_display_name || 'Buyer');
+    const avatarUrl = isBuyer ? t.seller_avatar_url : t.buyer_avatar_url;
+    const AVATAR_BASE = 'https://tnvhrmabgmlwehvfljmu.supabase.co/storage/v1/object/public/profile_pictures';
+    const avatarSrc = avatarUrl ? (avatarUrl.startsWith('http') ? avatarUrl : `${AVATAR_BASE}/${avatarUrl}`) : null;
+    const avatarHtml = avatarSrc
+      ? `<img src="${avatarSrc}" class="thread-avatar" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;" onerror="this.outerHTML='<div class=\'thread-avatar\'>👤</div>'">`
+      : `<div class="thread-avatar">👤</div>`;
     const listingTitle = t.marketplace_listings?.title || 'Listing';
     const lastMsg = t.last_message || 'No messages yet';
     const time = t.updated_at ? formatTime(t.updated_at) : '';
@@ -334,7 +340,7 @@ function renderThreads() {
 
     return `
     <div class="thread-item ${isActive ? 'active' : ''}" onclick="openThread('${t.id}')">
-      <div class="thread-avatar">👤</div>
+      ${avatarHtml}
       <div class="thread-info">
         <div class="thread-name">${partnerName}</div>
         <div class="thread-preview">${lastMsg}</div>
@@ -381,6 +387,21 @@ async function openOrCreateThread(listingId) {
     return;
   }
 
+  // Fetch seller profile for display name + avatar
+  let sellerName = 'Seller';
+  let sellerAvatar = null;
+  try {
+    const { data: profile } = await sb
+      .from('profiles')
+      .select('full_name, username, avatar_url')
+      .eq('id', listing.owner_id)
+      .single();
+    if (profile) {
+      sellerName = profile.full_name || profile.username || 'Seller';
+      sellerAvatar = profile.avatar_url || null;
+    }
+  } catch (_) {}
+
   // Create new thread tagged as web-only
   const { data: newThread, error } = await sb
     .from('firearm_listing_message_threads')
@@ -389,7 +410,8 @@ async function openOrCreateThread(listingId) {
       buyer_id: currentUser.id,
       seller_id: listing.owner_id,
       buyer_display_name: currentUser.email.split('@')[0],
-      seller_display_name: 'Seller',
+      seller_display_name: sellerName,
+      seller_avatar_url: sellerAvatar,
       last_message: null,
       source: 'web',
       updated_at: new Date().toISOString()
