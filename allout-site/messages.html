@@ -313,7 +313,32 @@ async function loadThreads() {
     return;
   }
 
-  threads = data || [];
+  // Enrich threads with live profile data for the partner
+  const raw = data || [];
+  threads = await Promise.all(raw.map(async t => {
+    const isBuyer = t.buyer_id === currentUser.id;
+    const partnerId = isBuyer ? t.seller_id : t.buyer_id;
+    try {
+      const { data: profile } = await sb
+        .from('profiles')
+        .select('full_name, username, avatar_url, id')
+        .eq('id', partnerId)
+        .single();
+      if (profile) {
+        if (isBuyer) {
+          t.seller_display_name = profile.full_name || profile.username || t.seller_display_name || 'Seller';
+          t.seller_avatar_url = profile.avatar_url || t.seller_avatar_url || null;
+          t.seller_profile_id = profile.id;
+        } else {
+          t.buyer_display_name = profile.full_name || profile.username || t.buyer_display_name || 'Buyer';
+          t.buyer_avatar_url = profile.avatar_url || t.buyer_avatar_url || null;
+          t.buyer_profile_id = profile.id;
+        }
+      }
+    } catch (_) {}
+    return t;
+  }));
+
   renderThreads();
 }
 
@@ -338,11 +363,14 @@ function renderThreads() {
     const time = t.updated_at ? formatTime(t.updated_at) : '';
     const isActive = t.id === currentThreadId;
 
+    const partnerId = isBuyer ? (t.seller_profile_id || t.seller_id) : (t.buyer_profile_id || t.buyer_id);
     return `
     <div class="thread-item ${isActive ? 'active' : ''}" onclick="openThread('${t.id}')">
       ${avatarHtml}
       <div class="thread-info">
-        <div class="thread-name">${partnerName}</div>
+        <div class="thread-name">
+          <a href="/user-listings?uid=${partnerId}" onclick="event.stopPropagation()" style="color:#fff;text-decoration:none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${partnerName}</a>
+        </div>
         <div class="thread-preview">${lastMsg}</div>
         <div class="thread-listing">Re: ${listingTitle}</div>
       </div>
@@ -438,7 +466,25 @@ async function openThread(threadId) {
   const listingTitle = thread.marketplace_listings?.title || 'Listing';
   const listingId = thread.listing_id || thread.marketplace_listings?.listing_id;
 
-  document.getElementById('chat-partner-name').textContent = partnerName;
+  // Show avatar in chat header
+  const avatarUrl = isBuyer ? thread.seller_avatar_url : thread.buyer_avatar_url;
+  const AVATAR_BASE = 'https://tnvhrmabgmlwehvfljmu.supabase.co/storage/v1/object/public/profile_pictures';
+  const avatarSrc = avatarUrl ? (avatarUrl.startsWith('http') ? avatarUrl : `${AVATAR_BASE}/${avatarUrl}`) : null;
+  let headerAvatarEl = document.getElementById('chat-header-avatar');
+  if (!headerAvatarEl) {
+    headerAvatarEl = document.createElement('div');
+    headerAvatarEl.id = 'chat-header-avatar';
+    headerAvatarEl.style.cssText = 'width:36px;height:36px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:16px;';
+    document.querySelector('.chat-header').prepend(headerAvatarEl);
+  }
+  if (avatarSrc) {
+    headerAvatarEl.innerHTML = `<img src="${avatarSrc}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentNode.textContent='👤'">`;
+  } else {
+    headerAvatarEl.textContent = '👤';
+  }
+
+  const partnerProfileId = isBuyer ? (thread.seller_profile_id || thread.seller_id) : (thread.buyer_profile_id || thread.buyer_id);
+  document.getElementById('chat-partner-name').innerHTML = `<a href="/user-listings?uid=${partnerProfileId}" style="color:#fff;text-decoration:none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${partnerName}</a>`;
   document.getElementById('chat-listing-link').innerHTML = listingId
     ? `Re: <a href="/listing/${listingId}" target="_blank">${listingTitle}</a>`
     : `Re: ${listingTitle}`;
