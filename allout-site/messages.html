@@ -168,6 +168,13 @@
       <input type="password" id="auth-password" placeholder="••••••••" autocomplete="current-password">
     </div>
     <button class="btn-full" id="auth-btn" onclick="signIn()">Sign In</button>
+    <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border);text-align:center">
+      <p style="font-size:12px;color:var(--muted);margin-bottom:14px;">Don't have an account? Allout accounts are created in the app.</p>
+      <a href="/app" style="display:inline-flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);color:#ccc;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:500;text-decoration:none;transition:border-color .2s" onmouseover="this.style.borderColor='#444'" onmouseout="this.style.borderColor='var(--border)'">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98l-.09.06c-.22.14-2.18 1.27-2.16 3.8.03 3.02 2.65 4.03 2.68 4.04l-.07.28zM13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+        Download Allout on the App Store
+      </a>
+    </div>
   </div>
 </div>
 
@@ -221,7 +228,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const SUPABASE_URL = 'https://tnvhrmabgmlwehvfljmu.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRudmhybWFiZ21sd2VodmZsam11Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI1MjM5NzUsImV4cCI6MjA1ODA5OTk3NX0.QRoEGFSCHGNnAz-8gMhMnEeOaM_5JI1W-6EB8GETMtg';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRudmhybWFiZ21sd2VodmZsam11Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5MDY5MjAsImV4cCI6MjA3ODQ4MjkyMH0.5aHVV-kI8dMFJ4cH2ydjkOnz4j9JNqPTrpK8NOUGdo4';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let currentUser = null;
@@ -296,11 +303,9 @@ function showApp() {
 async function loadThreads() {
   const { data, error } = await sb
     .from('firearm_listing_message_threads')
-    .select(`
-      *,
-      marketplace_listings(title, listing_id)
-    `)
+    .select(`*, marketplace_listings(title, listing_id)`)
     .or(`buyer_id.eq.${currentUser.id},seller_id.eq.${currentUser.id}`)
+    .eq('source', 'web')
     .order('updated_at', { ascending: false });
 
   if (error) {
@@ -344,28 +349,30 @@ function renderThreads() {
 
 // ── Open or Create Thread ─────────────────────────────────────────────────────
 async function openOrCreateThread(listingId) {
-  // Check if listing exists and get seller
+  // Get listing using owner_id (not seller_id)
   const { data: listing } = await sb
     .from('marketplace_listings')
-    .select('listing_id, seller_id, title')
+    .select('listing_id, owner_id, title')
     .eq('listing_id', listingId)
     .single();
 
   if (!listing) { toast('Listing not found.', 'error'); return; }
-  if (listing.seller_id === currentUser.id) {
-    // Seller viewing their own listing — just load their threads for this listing
+
+  // If current user is the seller, just show their threads for this listing
+  if (listing.owner_id === currentUser.id) {
     await loadThreads();
     const t = threads.find(x => x.listing_id === listingId);
     if (t) openThread(t.id);
     return;
   }
 
-  // Look for existing thread
+  // Look for existing web thread for this buyer+listing
   const { data: existing } = await sb
     .from('firearm_listing_message_threads')
     .select('id')
     .eq('listing_id', listingId)
     .eq('buyer_id', currentUser.id)
+    .eq('source', 'web')
     .single();
 
   if (existing) {
@@ -374,16 +381,17 @@ async function openOrCreateThread(listingId) {
     return;
   }
 
-  // Create new thread
+  // Create new thread tagged as web-only
   const { data: newThread, error } = await sb
     .from('firearm_listing_message_threads')
     .insert({
       listing_id: listingId,
       buyer_id: currentUser.id,
-      seller_id: listing.seller_id,
+      seller_id: listing.owner_id,
       buyer_display_name: currentUser.email.split('@')[0],
       seller_display_name: 'Seller',
       last_message: null,
+      source: 'web',
       updated_at: new Date().toISOString()
     })
     .select()
@@ -488,7 +496,8 @@ async function sendMessage() {
   const { error } = await sb.from('firearm_listing_messages').insert({
     thread_id: currentThreadId,
     sender_id: currentUser.id,
-    body
+    body,
+    source: 'web'
   });
 
   // Update thread last_message
