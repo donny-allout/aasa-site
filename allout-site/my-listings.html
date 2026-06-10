@@ -298,7 +298,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const SUPABASE_URL = 'https://tnvhrmabgmlwehvfljmu.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRudmhybWFiZ21sd2VodmZsam11Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI1MjM5NzUsImV4cCI6MjA1ODA5OTk3NX0.QRoEGFSCHGNnAz-8gMhMnEeOaM_5JI1W-6EB8GETMtg';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRudmhybWFiZ21sd2VodmZsam11Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5MDY5MjAsImV4cCI6MjA3ODQ4MjkyMH0.5aHVV-kI8dMFJ4cH2ydjkOnz4j9JNqPTrpK8NOUGdo4';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let currentUser = null;
@@ -424,7 +424,7 @@ function renderTab() {
       ${photoUrl}
       <div class="listing-body">
         <div class="listing-title">${l.title || 'Untitled Listing'}</div>
-        <div class="listing-meta">${l.category || 'Firearm'} · ${l.city || ''} · Listed ${date}</div>
+        <div class="listing-meta">${l.listing_type || 'Firearm'} · ${l.location_city || ''} · Listed ${date}</div>
         <div class="listing-price">${price}</div>
         <div class="listing-badges">
           <span class="badge ${isSold ? 'badge-sold' : 'badge-active'}">${isSold ? 'Sold' : 'Active'}</span>
@@ -454,7 +454,7 @@ function openEdit(id) {
   document.getElementById('edit-price').value = l.price_cents ? (l.price_cents / 100) : '';
   document.getElementById('edit-condition').value = l.condition || 'Good';
   document.getElementById('edit-caliber').value = l.caliber || '';
-  document.getElementById('edit-city').value = l.city || '';
+  document.getElementById('edit-city').value = l.location_city || '';
   document.getElementById('edit-description').value = l.description || '';
   document.getElementById('edit-ffl').checked = !!l.firearm_requires_ffl;
   document.getElementById('edit-modal').classList.add('open');
@@ -474,7 +474,7 @@ async function saveEdit() {
     price_cents: Math.round(parseFloat(document.getElementById('edit-price').value) * 100),
     condition: document.getElementById('edit-condition').value,
     caliber: document.getElementById('edit-caliber').value.trim(),
-    city: document.getElementById('edit-city').value.trim(),
+    location_city: document.getElementById('edit-city').value.trim(),
     description: document.getElementById('edit-description').value.trim(),
     firearm_requires_ffl: document.getElementById('edit-ffl').checked,
   };
