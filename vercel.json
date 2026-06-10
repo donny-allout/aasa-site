@@ -10,12 +10,24 @@
       "dest": "/.well-known/$1"
     },
     {
+      "src": "/app",
+      "dest": "/allout-site/app.html"
+    },
+    {
       "src": "/firearms",
       "dest": "/allout-site/firearms.html"
     },
     {
       "src": "/create-listing",
       "dest": "/allout-site/create-listing.html"
+    },
+    {
+      "src": "/my-listings",
+      "dest": "/allout-site/my-listings.html"
+    },
+    {
+      "src": "/messages",
+      "dest": "/allout-site/messages.html"
     },
     {
       "src": "/legal",
