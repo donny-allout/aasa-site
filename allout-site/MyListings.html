@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Listings — ALLOUT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --orange: #E8780A;
+    --green: #4a7c3f;
+    --bg: #080808;
+    --surface: #111;
+    --surface2: #161616;
+    --border: #1e1e1e;
+    --text: #e0e0e0;
+    --muted: #555;
+    --red: #c0392b;
+  }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-weight: 300; min-height: 100vh; }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 20px 48px;
+    background: rgba(8,8,8,0.92); backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-logo { font-family: 'Bebas Neue', cursive; font-size: 24px; letter-spacing: 0.18em; color: #fff; text-decoration: none; }
+  .nav-links { display: flex; gap: 24px; align-items: center; }
+  .nav-links a { font-size: 13px; color: var(--muted); text-decoration: none; letter-spacing: 0.05em; transition: color 0.2s; }
+  .nav-links a:hover { color: #fff; }
+  .nav-links a.active { color: var(--orange); }
+  .btn-nav-orange { background: var(--orange); color: #fff !important; padding: 9px 22px; border-radius: 8px; font-weight: 500 !important; }
+  .btn-nav-orange:hover { opacity: 0.85; }
+  .nav-user { display: flex; align-items: center; gap: 12px; }
+  .user-email { font-size: 12px; color: var(--muted); }
+  .btn-signout { background: none; border: 1px solid var(--border); color: var(--muted); padding: 6px 14px; border-radius: 6px; font-size: 12px; cursor: pointer; font-family: inherit; transition: all 0.2s; }
+  .btn-signout:hover { border-color: #444; color: #ccc; }
+
+  /* MAIN */
+  main { padding: 100px 48px 80px; max-width: 1000px; margin: 0 auto; }
+
+  /* AUTH GATE */
+  #auth-screen {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 60vh; text-align: center;
+  }
+  #auth-screen h2 { font-family: 'Bebas Neue', cursive; font-size: 40px; letter-spacing: 0.08em; color: #fff; margin-bottom: 10px; }
+  #auth-screen p { color: var(--muted); font-size: 14px; margin-bottom: 36px; }
+  .auth-box { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 36px; width: 100%; max-width: 380px; }
+  .auth-box h3 { font-size: 17px; font-weight: 600; color: #fff; margin-bottom: 24px; text-align: left; }
+  .field { margin-bottom: 16px; text-align: left; }
+  .field label { display: block; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .field input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; color: #fff; font-family: inherit; font-size: 14px; outline: none; transition: border-color 0.2s; }
+  .field input:focus { border-color: var(--orange); }
+  .btn-full { width: 100%; background: var(--orange); color: #fff; border: none; padding: 14px; border-radius: 10px; font-size: 15px; font-weight: 600; font-family: inherit; cursor: pointer; letter-spacing: 0.05em; transition: opacity 0.2s; }
+  .btn-full:hover { opacity: 0.88; }
+  .btn-full:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* DASHBOARD */
+  #dashboard { display: none; }
+  .page-header { margin-bottom: 36px; }
+  .page-header h1 { font-family: 'Bebas Neue', cursive; font-size: 48px; letter-spacing: 0.08em; color: #fff; margin-bottom: 6px; }
+  .page-header p { color: var(--muted); font-size: 14px; }
+  .header-row { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 36px; }
+  .btn-new-listing { display: inline-flex; align-items: center; gap: 8px; background: var(--orange); color: #fff; padding: 12px 24px; border-radius: 10px; font-size: 14px; font-weight: 500; text-decoration: none; transition: opacity 0.2s; white-space: nowrap; }
+  .btn-new-listing:hover { opacity: 0.88; }
+
+  /* TABS */
+  .tabs { display: flex; gap: 4px; margin-bottom: 28px; border-bottom: 1px solid var(--border); }
+  .tab { padding: 10px 20px; font-size: 13px; font-family: inherit; background: none; border: none; color: var(--muted); cursor: pointer; position: relative; transition: color 0.2s; letter-spacing: 0.03em; }
+  .tab.active { color: #fff; }
+  .tab.active::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: var(--orange); border-radius: 1px 1px 0 0; }
+  .tab-count { background: var(--surface2); color: var(--muted); font-size: 11px; padding: 2px 7px; border-radius: 10px; margin-left: 6px; }
+  .tab.active .tab-count { background: rgba(232,120,10,0.15); color: var(--orange); }
+
+  /* LISTING CARDS */
+  #listings-grid { display: flex; flex-direction: column; gap: 16px; }
+  .listing-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    display: flex; gap: 20px; padding: 20px; transition: border-color 0.2s;
+  }
+  .listing-card:hover { border-color: #2a2a2a; }
+  .listing-card.sold { opacity: 0.6; }
+
+  .listing-img { width: 100px; height: 80px; border-radius: 8px; object-fit: cover; background: var(--surface2); flex-shrink: 0; }
+  .listing-img-placeholder { width: 100px; height: 80px; border-radius: 8px; background: var(--surface2); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+
+  .listing-body { flex: 1; min-width: 0; }
+  .listing-title { font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .listing-meta { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+  .listing-price { font-size: 17px; font-weight: 700; color: var(--orange); }
+  .listing-badges { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .badge { font-size: 11px; padding: 3px 10px; border-radius: 20px; letter-spacing: 0.04em; }
+  .badge-active { background: rgba(74,124,63,0.15); color: #6db85f; border: 1px solid rgba(74,124,63,0.25); }
+  .badge-sold { background: rgba(100,100,100,0.15); color: #888; border: 1px solid #2a2a2a; }
+  .badge-ffl { background: rgba(232,120,10,0.1); color: var(--orange); border: 1px solid rgba(232,120,10,0.2); }
+  .badge-pending { background: rgba(255,200,0,0.1); color: #f5c518; border: 1px solid rgba(255,200,0,0.2); }
+
+  .listing-actions { display: flex; flex-direction: column; gap: 8px; justify-content: center; flex-shrink: 0; }
+  .btn-action { padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 500; font-family: inherit; cursor: pointer; transition: all 0.2s; white-space: nowrap; text-decoration: none; display: inline-block; text-align: center; }
+  .btn-edit { background: var(--surface2); color: #ccc; border: 1px solid var(--border); }
+  .btn-edit:hover { border-color: #444; color: #fff; }
+  .btn-mark-sold { background: transparent; color: var(--green); border: 1px solid rgba(74,124,63,0.35); }
+  .btn-mark-sold:hover { background: rgba(74,124,63,0.1); }
+  .btn-mark-active { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .btn-mark-active:hover { border-color: #444; color: #ccc; }
+  .btn-delete { background: transparent; color: var(--red); border: 1px solid rgba(192,57,43,0.25); }
+  .btn-delete:hover { background: rgba(192,57,43,0.08); }
+  .btn-view { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .btn-view:hover { border-color: #444; color: #ccc; }
+  .msg-badge { background: rgba(232,120,10,0.15); color: var(--orange); font-size: 11px; padding: 2px 8px; border-radius: 10px; margin-left: 6px; }
+
+  /* EMPTY STATE */
+  .empty-state { text-align: center; padding: 80px 24px; }
+  .empty-icon { font-size: 48px; margin-bottom: 16px; }
+  .empty-state h3 { font-size: 18px; font-weight: 600; color: #fff; margin-bottom: 8px; }
+  .empty-state p { color: var(--muted); font-size: 14px; margin-bottom: 28px; }
+
+  /* EDIT MODAL */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 36px; width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; }
+  .modal h2 { font-family: 'Bebas Neue', cursive; font-size: 32px; letter-spacing: 0.08em; color: #fff; margin-bottom: 24px; }
+  .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .modal-grid .full { grid-column: 1 / -1; }
+  .field select { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; color: #fff; font-family: inherit; font-size: 14px; outline: none; }
+  .field select:focus { border-color: var(--orange); }
+  .field textarea { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; color: #fff; font-family: inherit; font-size: 14px; outline: none; resize: vertical; min-height: 90px; }
+  .field textarea:focus { border-color: var(--orange); }
+  .modal-actions { display: flex; gap: 12px; margin-top: 24px; }
+  .btn-cancel { flex: 1; background: var(--surface2); color: #ccc; border: 1px solid var(--border); padding: 13px; border-radius: 10px; font-size: 14px; font-weight: 500; font-family: inherit; cursor: pointer; }
+  .btn-save { flex: 2; background: var(--orange); color: #fff; border: none; padding: 13px; border-radius: 10px; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; }
+  .btn-save:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* CONFIRM MODAL */
+  .confirm-modal { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 32px; width: 100%; max-width: 380px; text-align: center; }
+  .confirm-modal h3 { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 10px; }
+  .confirm-modal p { font-size: 14px; color: var(--muted); margin-bottom: 24px; line-height: 1.5; }
+  .confirm-actions { display: flex; gap: 12px; }
+  .btn-confirm-delete { flex: 1; background: var(--red); color: #fff; border: none; padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; }
+  .btn-confirm-cancel { flex: 1; background: var(--surface2); color: #ccc; border: 1px solid var(--border); padding: 12px; border-radius: 10px; font-size: 14px; font-family: inherit; cursor: pointer; }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px); background: #222; color: #fff; padding: 14px 24px; border-radius: 10px; font-size: 14px; transition: transform 0.3s; z-index: 999; white-space: nowrap; border: 1px solid var(--border); }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.success { border-color: rgba(74,124,63,0.4); background: #0f1f0e; color: #6db85f; }
+  .toast.error { border-color: rgba(192,57,43,0.4); background: #1f0e0e; color: #e57373; }
+
+  /* LOADING */
+  .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.2); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 640px) {
+    nav { padding: 16px 20px; }
+    .nav-links { display: none; }
+    main { padding: 80px 20px 60px; }
+    .listing-card { flex-direction: column; }
+    .listing-actions { flex-direction: row; flex-wrap: wrap; }
+    .modal-grid { grid-template-columns: 1fr; }
+    .header-row { flex-direction: column; align-items: flex-start; gap: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">ALLOUT</a>
+  <div class="nav-links">
+    <a href="/firearms">Firearms</a>
+    <a href="/my-listings" class="active">My Listings</a>
+    <a href="/messages">Messages</a>
+    <a href="/app" class="btn-nav-orange">Download App</a>
+  </div>
+  <div class="nav-user" id="nav-user" style="display:none;">
+    <span class="user-email" id="user-email-display"></span>
+    <button class="btn-signout" onclick="signOut()">Sign Out</button>
+  </div>
+</nav>
+
+<main>
+  <!-- AUTH GATE -->
+  <div id="auth-screen">
+    <h2>MY LISTINGS</h2>
+    <p>Sign in to manage your firearm listings.</p>
+    <div class="auth-box">
+      <h3>Sign In</h3>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="auth-email" placeholder="your@email.com" autocomplete="email">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="auth-password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button class="btn-full" id="auth-btn" onclick="signIn()">Sign In</button>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dashboard">
+    <div class="header-row">
+      <div class="page-header">
+        <h1>MY LISTINGS</h1>
+        <p>Manage your firearm listings and respond to buyers.</p>
+      </div>
+      <a href="/create-listing" class="btn-new-listing">+ New Listing</a>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="active" onclick="switchTab('active')">Active <span class="tab-count" id="count-active">0</span></button>
+      <button class="tab" data-tab="sold" onclick="switchTab('sold')">Sold <span class="tab-count" id="count-sold">0</span></button>
+      <button class="tab" data-tab="all" onclick="switchTab('all')">All <span class="tab-count" id="count-all">0</span></button>
+    </div>
+
+    <div id="listings-grid">
+      <div class="empty-state">
+        <div class="spinner"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal">
+    <h2>Edit Listing</h2>
+    <input type="hidden" id="edit-id">
+    <div class="modal-grid">
+      <div class="field full">
+        <label>Title</label>
+        <input type="text" id="edit-title">
+      </div>
+      <div class="field">
+        <label>Price ($)</label>
+        <input type="number" id="edit-price" min="0">
+      </div>
+      <div class="field">
+        <label>Condition</label>
+        <select id="edit-condition">
+          <option value="New">New</option>
+          <option value="Like New">Like New</option>
+          <option value="Very Good">Very Good</option>
+          <option value="Good">Good</option>
+          <option value="Fair">Fair</option>
+          <option value="Poor">Poor</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Caliber / Gauge</label>
+        <input type="text" id="edit-caliber">
+      </div>
+      <div class="field">
+        <label>City</label>
+        <input type="text" id="edit-city">
+      </div>
+      <div class="field full">
+        <label>Description</label>
+        <textarea id="edit-description"></textarea>
+      </div>
+      <div class="field full" style="display:flex;align-items:center;gap:10px;">
+        <input type="checkbox" id="edit-ffl" style="width:auto;accent-color:var(--orange);">
+        <label for="edit-ffl" style="text-transform:none;letter-spacing:0;font-size:14px;color:var(--text);">FFL transfer required</label>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeEditModal()">Cancel</button>
+      <button class="btn-save" id="save-btn" onclick="saveEdit()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM DELETE MODAL -->
+<div class="modal-overlay" id="confirm-modal">
+  <div class="confirm-modal">
+    <h3>Remove Listing?</h3>
+    <p>This listing will be permanently deleted. This can't be undone.</p>
+    <div class="confirm-actions">
+      <button class="btn-confirm-cancel" onclick="closeConfirm()">Keep It</button>
+      <button class="btn-confirm-delete" id="confirm-delete-btn" onclick="confirmDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = 'https://tnvhrmabgmlwehvfljmu.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRudmhybWFiZ21sd2VodmZsam11Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI1MjM5NzUsImV4cCI6MjA1ODA5OTk3NX0.QRoEGFSCHGNnAz-8gMhMnEeOaM_5JI1W-6EB8GETMtg';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let currentUser = null;
+let allListings = [];
+let currentTab = 'active';
+let pendingDeleteId = null;
+
+// ── Auth ─────────────────────────────────────────────────────────────────────
+async function init() {
+  // Check hash for session tokens (coming from app)
+  const hash = window.location.hash;
+  if (hash.includes('access_token')) {
+    const params = new URLSearchParams(hash.replace('#', ''));
+    const { data, error } = await sb.auth.setSession({
+      access_token: params.get('access_token'),
+      refresh_token: params.get('refresh_token')
+    });
+    if (!error && data.session) {
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+  }
+
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    currentUser = session.user;
+    showDashboard();
+  }
+}
+
+async function signIn() {
+  const email = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  if (!email || !password) { toast('Enter your email and password.', 'error'); return; }
+
+  const btn = document.getElementById('auth-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
+
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+  if (error) {
+    toast(error.message, 'error');
+    btn.disabled = false; btn.textContent = 'Sign In';
+    return;
+  }
+  currentUser = data.user;
+  showDashboard();
+}
+
+async function signOut() {
+  await sb.auth.signOut();
+  currentUser = null;
+  allListings = [];
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('nav-user').style.display = 'none';
+}
+
+function showDashboard() {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'block';
+  document.getElementById('nav-user').style.display = 'flex';
+  document.getElementById('user-email-display').textContent = currentUser.email;
+  loadListings();
+}
+
+// ── Listings ──────────────────────────────────────────────────────────────────
+async function loadListings() {
+  const { data, error } = await sb
+    .from('marketplace_listings')
+    .select('*')
+    .eq('seller_id', currentUser.id)
+    .order('created_at', { ascending: false });
+
+  if (error) { toast('Failed to load listings.', 'error'); return; }
+  allListings = data || [];
+  updateCounts();
+  renderTab();
+}
+
+function updateCounts() {
+  const active = allListings.filter(l => l.status !== 'sold').length;
+  const sold = allListings.filter(l => l.status === 'sold').length;
+  document.getElementById('count-active').textContent = active;
+  document.getElementById('count-sold').textContent = sold;
+  document.getElementById('count-all').textContent = allListings.length;
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+  renderTab();
+}
+
+function renderTab() {
+  let filtered = allListings;
+  if (currentTab === 'active') filtered = allListings.filter(l => l.status !== 'sold');
+  if (currentTab === 'sold') filtered = allListings.filter(l => l.status === 'sold');
+
+  const grid = document.getElementById('listings-grid');
+  if (filtered.length === 0) {
+    grid.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">🔍</div>
+        <h3>${currentTab === 'sold' ? 'No sold listings' : 'No active listings'}</h3>
+        <p>${currentTab === 'sold' ? 'Listings you mark as sold will appear here.' : 'List your first firearm to get started.'}</p>
+        ${currentTab !== 'sold' ? '<a href="/create-listing" class="btn-new-listing" style="display:inline-flex;">+ Create Listing</a>' : ''}
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map(l => {
+    const photoUrl = l.photo_urls && l.photo_urls.length > 0
+      ? `<img src="${l.photo_urls[0]}" class="listing-img" onerror="this.outerHTML='<div class=listing-img-placeholder>🔫</div>'">`
+      : `<div class="listing-img-placeholder">🔫</div>`;
+
+    const isSold = l.status === 'sold';
+    const price = l.price ? `$${Number(l.price).toLocaleString()}` : 'Price not set';
+    const date = new Date(l.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+    return `
+    <div class="listing-card ${isSold ? 'sold' : ''}" id="card-${l.listing_id}">
+      ${photoUrl}
+      <div class="listing-body">
+        <div class="listing-title">${l.title || 'Untitled Listing'}</div>
+        <div class="listing-meta">${l.category || 'Firearm'} · ${l.city || ''} · Listed ${date}</div>
+        <div class="listing-price">${price}</div>
+        <div class="listing-badges">
+          <span class="badge ${isSold ? 'badge-sold' : 'badge-active'}">${isSold ? 'Sold' : 'Active'}</span>
+          ${l.firearm_requires_ffl ? '<span class="badge badge-ffl">FFL Required</span>' : ''}
+          ${l.condition ? `<span class="badge" style="background:var(--surface2);color:var(--muted);border:1px solid var(--border)">${l.condition}</span>` : ''}
+        </div>
+      </div>
+      <div class="listing-actions">
+        <a href="/listing/${l.listing_id}" class="btn-action btn-view" target="_blank">View</a>
+        <a href="/messages?listing=${l.listing_id}" class="btn-action btn-edit">Messages</a>
+        ${!isSold
+          ? `<button class="btn-action btn-mark-sold" onclick="markSold('${l.listing_id}', true)">Mark Sold</button>`
+          : `<button class="btn-action btn-mark-active" onclick="markSold('${l.listing_id}', false)">Relist</button>`}
+        <button class="btn-action btn-edit" onclick="openEdit('${l.listing_id}')">Edit</button>
+        <button class="btn-action btn-delete" onclick="openConfirm('${l.listing_id}')">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Edit ──────────────────────────────────────────────────────────────────────
+function openEdit(id) {
+  const l = allListings.find(x => x.listing_id === id);
+  if (!l) return;
+  document.getElementById('edit-id').value = id;
+  document.getElementById('edit-title').value = l.title || '';
+  document.getElementById('edit-price').value = l.price || '';
+  document.getElementById('edit-condition').value = l.condition || 'Good';
+  document.getElementById('edit-caliber').value = l.caliber || '';
+  document.getElementById('edit-city').value = l.city || '';
+  document.getElementById('edit-description').value = l.description || '';
+  document.getElementById('edit-ffl').checked = !!l.firearm_requires_ffl;
+  document.getElementById('edit-modal').classList.add('open');
+}
+
+function closeEditModal() {
+  document.getElementById('edit-modal').classList.remove('open');
+}
+
+async function saveEdit() {
+  const id = document.getElementById('edit-id').value;
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  const updates = {
+    title: document.getElementById('edit-title').value.trim(),
+    price: parseFloat(document.getElementById('edit-price').value),
+    condition: document.getElementById('edit-condition').value,
+    caliber: document.getElementById('edit-caliber').value.trim(),
+    city: document.getElementById('edit-city').value.trim(),
+    description: document.getElementById('edit-description').value.trim(),
+    firearm_requires_ffl: document.getElementById('edit-ffl').checked,
+  };
+
+  const { error } = await sb.from('marketplace_listings').update(updates).eq('listing_id', id);
+  btn.disabled = false; btn.textContent = 'Save Changes';
+
+  if (error) { toast('Save failed: ' + error.message, 'error'); return; }
+
+  // Update local data
+  const idx = allListings.findIndex(x => x.listing_id === id);
+  if (idx !== -1) allListings[idx] = { ...allListings[idx], ...updates };
+  closeEditModal();
+  renderTab();
+  toast('Listing updated.', 'success');
+}
+
+// ── Mark Sold ─────────────────────────────────────────────────────────────────
+async function markSold(id, sold) {
+  const { error } = await sb
+    .from('marketplace_listings')
+    .update({ status: sold ? 'sold' : 'active' })
+    .eq('listing_id', id);
+
+  if (error) { toast('Update failed.', 'error'); return; }
+  const idx = allListings.findIndex(x => x.listing_id === id);
+  if (idx !== -1) allListings[idx].status = sold ? 'sold' : 'active';
+  updateCounts();
+  renderTab();
+  toast(sold ? 'Marked as sold.' : 'Listing relisted.', 'success');
+}
+
+// ── Delete ─────────────────────────────────────────────────────────────────────
+function openConfirm(id) {
+  pendingDeleteId = id;
+  document.getElementById('confirm-modal').classList.add('open');
+}
+function closeConfirm() {
+  pendingDeleteId = null;
+  document.getElementById('confirm-modal').classList.remove('open');
+}
+async function confirmDelete() {
+  if (!pendingDeleteId) return;
+  const btn = document.getElementById('confirm-delete-btn');
+  btn.disabled = true; btn.textContent = 'Deleting…';
+
+  const { error } = await sb.from('marketplace_listings').delete().eq('listing_id', pendingDeleteId);
+  btn.disabled = false; btn.textContent = 'Delete';
+
+  if (error) { toast('Delete failed.', 'error'); closeConfirm(); return; }
+  allListings = allListings.filter(x => x.listing_id !== pendingDeleteId);
+  closeConfirm();
+  updateCounts();
+  renderTab();
+  toast('Listing deleted.', 'success');
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function toast(msg, type = 'info') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `toast show ${type}`;
+  setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+// Close modals on overlay click
+document.getElementById('edit-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeEditModal(); });
+document.getElementById('confirm-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeConfirm(); });
+
+init();
+</script>
+</body>
+</html>
