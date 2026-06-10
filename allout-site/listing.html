@@ -338,11 +338,15 @@ async function load() {
     if (loc) { text('listing-location', loc); block('loc-section'); }
 
     if (seller) {
-      text('seller-name', seller.full_name || seller.username || 'Allout Member');
+      const sellerDisplayName = seller.full_name || seller.username || 'Allout Member';
+      const nameEl = document.getElementById('seller-name');
+      nameEl.innerHTML = `<a href="/user-listings?uid=${listing.owner_id}" style="color:#fff;text-decoration:none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${sellerDisplayName}</a>`;
       if (seller.avatar_url) {
         const av = document.getElementById('seller-avatar');
         av.src = seller.avatar_url.startsWith('http') ? seller.avatar_url : `${AVATAR_BASE}/${seller.avatar_url}`;
         av.style.display = 'block'; hide('seller-avatar-placeholder');
+        av.style.cursor = 'pointer';
+        av.onclick = () => window.location.href = `/user-listings?uid=${listing.owner_id}`;
       }
       block('seller-section');
     }
