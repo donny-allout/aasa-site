@@ -295,7 +295,7 @@ function showApp() {
 // ── Threads ───────────────────────────────────────────────────────────────────
 async function loadThreads() {
   const { data, error } = await sb
-    .from('listing_message_threads')
+    .from('firearm_listing_message_threads')
     .select(`
       *,
       marketplace_listings(title, listing_id)
@@ -362,7 +362,7 @@ async function openOrCreateThread(listingId) {
 
   // Look for existing thread
   const { data: existing } = await sb
-    .from('listing_message_threads')
+    .from('firearm_listing_message_threads')
     .select('id')
     .eq('listing_id', listingId)
     .eq('buyer_id', currentUser.id)
@@ -376,7 +376,7 @@ async function openOrCreateThread(listingId) {
 
   // Create new thread
   const { data: newThread, error } = await sb
-    .from('listing_message_threads')
+    .from('firearm_listing_message_threads')
     .insert({
       listing_id: listingId,
       buyer_id: currentUser.id,
@@ -425,7 +425,7 @@ async function openThread(threadId) {
     .on('postgres_changes', {
       event: 'INSERT',
       schema: 'public',
-      table: 'listing_messages',
+      table: 'firearm_listing_messages',
       filter: `thread_id=eq.${threadId}`
     }, payload => {
       appendMessage(payload.new);
@@ -438,7 +438,7 @@ async function loadMessages(threadId) {
   area.innerHTML = '<div style="text-align:center;padding:20px;"><span class="spinner"></span></div>';
 
   const { data, error } = await sb
-    .from('listing_messages')
+    .from('firearm_listing_messages')
     .select('*')
     .eq('thread_id', threadId)
     .order('created_at', { ascending: true });
@@ -485,14 +485,14 @@ async function sendMessage() {
   input.value = '';
   input.style.height = 'auto';
 
-  const { error } = await sb.from('listing_messages').insert({
+  const { error } = await sb.from('firearm_listing_messages').insert({
     thread_id: currentThreadId,
     sender_id: currentUser.id,
     body
   });
 
   // Update thread last_message
-  await sb.from('listing_message_threads').update({
+  await sb.from('firearm_listing_message_threads').update({
     last_message: body.length > 60 ? body.slice(0, 60) + '…' : body,
     updated_at: new Date().toISOString()
   }).eq('id', currentThreadId);
