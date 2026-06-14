@@ -30,7 +30,7 @@
       "dest": "/allout-site/messages.html"
     },
     {
-      "src": "/user-listings",
+      "src": "/user-listings(.*)",
       "dest": "/allout-site/user-listings.html"
     },
     {
